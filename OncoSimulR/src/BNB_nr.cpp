@@ -482,6 +482,10 @@ void nr_totPopSize_and_fill_out_crude_P(int& outNS_i,
       addToPOM(pom, "_EXTINCTION_");
     }
   }
+  
+  // TODO: Evaluate interventions and resize population
+  // The structure must be created when nr_BNB_Algo5 is called
+  // Thats what i understand at this moment
 }
 
 // FIXME: I might want to return the actual drivers in each period
@@ -1996,7 +2000,8 @@ Rcpp::List nr_BNB_Algo5(Rcpp::List rFE,
 			double cPDetect_i,
 			double checkSizePEvery,
 			bool AND_DrvProbExit,
-			Rcpp::List fixation_i) {
+			Rcpp::List fixation_i,
+			Rcpp::List modelChanges) {
   // double cPDetect){
   // double n2,
   // double p2,
