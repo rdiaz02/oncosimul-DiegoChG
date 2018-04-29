@@ -675,11 +675,11 @@ oncoSimulIndiv <- function(fp,
             if( (!is.list(fixation)) && (!is.vector(fixation))  )
                 stop("'fixation' must be a list or a vector.")
             if(!(all(unlist(lapply(fixation, is.vector)))))
-                stop("Each element of 'fixation' must be a single element character vector.")
-            if(!(all(unlist(lapply(fixation, class)) == "character")))
-                stop("Each element of 'fixation' must be a single element character vector.")
+                stop("Each element of 'fixation' must be a single element vector.")
+            if(!(any(unlist(lapply(fixation, class)) == "character")))
+                stop("At least one element of 'fixation' must be a single element character vector.")
             if(!(all( unlist(lapply(fixation, length)) == 1)))
-                stop("Each element of 'fixation' must be a single element character vector.")
+                stop("Each element of 'fixation' must be a single element vector.")
             if(AND_DrvProbExit)
                 stop("It makes no sense to pass AND_DrvProbExit and a fixation list.")
         }
@@ -1619,6 +1619,7 @@ plotClonePhylog <- function(x, N = 1, t = "last",
 
 closest_time <- function(x, size) {
     ## Find the first time when a given size is reached
+    ## But these are not times, but the position in pops.by.time. Bad naming.
     sizes <- rowSums(x$pops.by.time[, -1, drop = FALSE])
     candidates <- which(sizes >= size)
     if(length(candidates) == 0) {
@@ -1633,6 +1634,7 @@ closest_time <- function(x, size) {
 
 get.the.time.for.sample <- function(tmp, timeSample, popSizeSample) {
     if( !is.null(popSizeSample) && (popSizeSample >= 0) )  {
+        ## should be "closest_index" and "the.index"
         the.time <- closest_time(tmp, popSizeSample)
     } else if(timeSample == "last") {
         if(tmp$TotalPopSize == 0) {

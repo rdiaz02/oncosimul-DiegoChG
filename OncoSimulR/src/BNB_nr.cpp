@@ -230,6 +230,10 @@ void nr_totPopSize_and_fill_out_crude_P(int& outNS_i,
 					std::mt19937& ran_gen,
 					const bool& AND_DrvProbExit,
 					const std::vector<std::vector<int> >& fixation_l,
+					const double& fixation_tolerance,
+					const int& min_successive_fixation,
+					const double& fixation_min_size,
+					int& num_successive_fixation,
 					POM& pom,
 					const std::map<int, std::string>& intName,
 					const fitness_as_genes& genesInFitness,
@@ -298,9 +302,14 @@ void nr_totPopSize_and_fill_out_crude_P(int& outNS_i,
       // FIXME do we want tolerance around that value? 
       double max_popSize_fixation =
 	*std::max_element(popSize_fixation.begin(), popSize_fixation.end());
-      if( (max_popSize_fixation > 0 ) &&
-	  (max_popSize_fixation == totPopSize)) {
-	fixated = true;
+      if( (max_popSize_fixation >= fixation_min_size ) &&
+	  (max_popSize_fixation >= (totPopSize * (1 - fixation_tolerance) )) ) {
+	++num_successive_fixation;
+	// DP1("increased num_successive_fixation");
+	if( num_successive_fixation >= min_successive_fixation) fixated = true;
+      } else {
+	// DP1("zeroed num_successive_fixation");
+	num_successive_fixation = 0;
       }
     }
   }
@@ -353,7 +362,20 @@ void nr_totPopSize_and_fill_out_crude_P(int& outNS_i,
     checkSizePNow = false;
   }
 
+  // We do not verify that conditions for exiting are also satisfied
+  // at the exit time when extraTime > 0. We could do that,
+  // checking again for the conditions (or the reasonable conditions, so
+  // probably not detectSizeP). For instance, with fixated.
 
+  // For fixated in particular, note that we evaluate fixation always, but
+  // we might be exiting when there is no longer fixation.  But the logic
+  // with fixation is probably to use as large a min_successive_fixation
+  // as desired and no extraTime.
+
+  // Probably would not need to check lastMaxDr and popSizeOverDDr
+  // as those should never decrease. Really?? FIXME
+
+  
   if(AND_DrvProbExit) {
     // The AND of detectionProb and drivers
     // fixated plays no role here, and cannot be passed from R
@@ -389,8 +411,12 @@ void nr_totPopSize_and_fill_out_crude_P(int& outNS_i,
 	  done_at = currentTime + extraTime;
 	}
       } else if (currentTime >= done_at) {
-  	simulsDone = true;
-  	reachDetection = true; 
+	// if(fixated) {
+	  simulsDone = true;
+	  reachDetection = true;
+	// } else {
+	//   done_at = -1;
+	// }
       }
     } else if( (fixated) ||
 	       (totPopSize >= detectionSize) ||
@@ -943,6 +969,9 @@ static void nr_innerBNB (const fitnessEffectsAll& fitnessEffects,
 			const double& checkSizePEvery,
 			const bool& AND_DrvProbExit,
 			const std::vector< std::vector<int> >& fixation_l,
+			 const double& fixation_tolerance,
+			 const int& min_successive_fixation,
+			 const double& fixation_min_size,
 			 int& ti_dbl_min,
 			 int& ti_e3,
 			 std::map<std::string, std::string>& lod,
@@ -1121,6 +1150,10 @@ static void nr_innerBNB (const fitnessEffectsAll& fitnessEffects,
   int lastMaxDr = 0;
   double done_at = -9;
 
+
+  int num_successive_fixation = 0; // none so far
+
+  
 #ifdef MIN_RATIO_MUTS_NR
   g_min_birth_mut_ratio_nr = DBL_MAX;
   g_min_death_mut_ratio_nr = DBL_MAX;
@@ -1913,6 +1946,10 @@ static void nr_innerBNB (const fitnessEffectsAll& fitnessEffects,
 					 ran_gen,
 					 AND_DrvProbExit,
 					 fixation_l,
+					 fixation_tolerance,
+					 min_successive_fixation,
+					 fixation_min_size,
+					 num_successive_fixation,
 					 pom, intName,
 					 genesInFitness); //keepEvery is for thinning
       if(verbosity >= 3) {
@@ -2045,6 +2082,7 @@ Rcpp::List nr_BNB_Algo5(Rcpp::List rFE,
 
   double cPDetect = cPDetect_i;
   if( (n2 > 0) && (p2 > 0) ) {
+    if (PDBaseline <= 0) throw std::range_error("PDBaseline <= 0");
     cPDetect = set_cPDetect(n2, p2, PDBaseline);
     if(verbosity >= 1)
       Rcpp::Rcout << "  cPDetect set at " << cPDetect << "\n";
@@ -2075,13 +2113,22 @@ Rcpp::List nr_BNB_Algo5(Rcpp::List rFE,
   }
 
   // fixation: run until some genotype combinations fixed
-  // FIXME: later, extract tolerance as the very first element
-  // or very last. Oooops, but that is a float...
-  std::vector < std::vector<int> > fixation_l(fixation_i.size());
-  if( fixation_i.size() != 0 ) {
-    fixation_l = list_to_vector_of_int_vectors(fixation_i);
-  }
+  
+  double fixation_tolerance = -9;
+  int min_successive_fixation = 100;
+  double fixation_min_size = 0.0;
+  std::vector < std::vector<int> > fixation_l;
 
+  if( fixation_i.size() != 0 ) {
+    Rcpp::List fggl = fixation_i["fixation_list"] ;
+    fixation_l = list_to_vector_of_int_vectors(fggl); // FIXME
+    fixation_tolerance = Rcpp::as<double>(fixation_i["fixation_tolerance"]);
+    min_successive_fixation = Rcpp::as<int>(fixation_i["min_successive_fixation"]);
+    fixation_min_size = Rcpp::as<double>(fixation_i["fixation_min_size"]);
+  } else {
+    fixation_l.resize(0); // explicit
+  }
+ 
   
   bool runAgain = true;
   bool reachDetection = false;
@@ -2257,6 +2304,9 @@ Rcpp::List nr_BNB_Algo5(Rcpp::List rFE,
 		  checkSizePEvery,
 		  AND_DrvProbExit,
 		  fixation_l,
+		  fixation_tolerance,
+		  min_successive_fixation,
+		  fixation_min_size,
 		  ti_dbl_min,
 		  ti_e3,
 		  lod,

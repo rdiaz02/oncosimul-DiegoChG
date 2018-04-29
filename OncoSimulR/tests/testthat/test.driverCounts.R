@@ -1,3 +1,4 @@
+inittime <- Sys.time()
 cat(paste("\n Starting driverCounts at", date()))
 ## RNGkind("Mersenne-Twister") ## we have some examples below with random
 
@@ -67,3 +68,5 @@ date()
 
 
 cat(paste("\n Ending driverCounts at", date(), "\n"))
+cat(paste("  Took ", round(difftime(Sys.time(), inittime, units = "secs"), 2), "\n\n"))
+rm(inittime)

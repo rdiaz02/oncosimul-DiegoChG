@@ -1,3 +1,4 @@
+inittime <- Sys.time()
 cat(paste("\n Starting warning-mutPropGrowth tests", date(), "\n"))
 
 ## RNGkind("Mersenne-Twister")
@@ -76,3 +77,5 @@ test_that("mutationPropGrowth no warning with McFl, indiv", {
 cat(paste("\n Ending warning-mutPropGrowth tests", date(), "\n"))
 
 
+cat(paste("  Took ", round(difftime(Sys.time(), inittime, units = "secs"), 2), "\n\n"))
+rm(inittime)

@@ -1,3 +1,4 @@
+inittime <- Sys.time()
 cat(paste("\n Starting oncoSimulSample-failures tests", date(), "\n"))
 
 ## RNGkind("Mersenne-Twister")
@@ -113,3 +114,5 @@ test_that("oncoSimulSample C++ exception triggered", {
           })
 
 cat(paste("\n Ending oncoSimulSample-failures tests", date(), "\n"))
+cat(paste("  Took ", round(difftime(Sys.time(), inittime, units = "secs"), 2), "\n\n"))
+rm(inittime)

@@ -1,3 +1,4 @@
+inittime <- Sys.time()
 cat(paste("\n Starting test.Z-all-fitness at", date(), "\n"))
 
 RNGkind("Mersenne-Twister")
@@ -131,3 +132,5 @@ test_that("long example OK", {
 set.seed(NULL)
 
 cat(paste("\n Ending test.Z-all-fitness at", date(), "\n"))
+cat(paste("  Took ", round(difftime(Sys.time(), inittime, units = "secs"), 2), "\n\n"))
+rm(inittime)

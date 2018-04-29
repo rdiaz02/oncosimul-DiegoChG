@@ -1,3 +1,4 @@
+inittime <- Sys.time()
 cat(paste("\n Starting LOD_POM at", date(), "\n"))
 date()
 test_that("Exercise LOD and POM code", {
@@ -430,10 +431,6 @@ date()
 
 cat(paste("\n Ending LOD_POM at", date(), "\n"))
 
-
-
-
-
 ### Why we need to exclude some POMs in the testing
 
 ## with i = 2335   ## new one removes entries
@@ -459,3 +456,5 @@ cat(paste("\n Ending LOD_POM at", date(), "\n"))
 ##         expect_true(identical(s7$other$POM, pom))
 ## }
 
+cat(paste("  Took ", round(difftime(Sys.time(), inittime, units = "secs"), 2), "\n\n"))
+rm(inittime)
