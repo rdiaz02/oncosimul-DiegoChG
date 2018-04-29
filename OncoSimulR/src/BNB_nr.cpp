@@ -485,6 +485,7 @@ void nr_totPopSize_and_fill_out_crude_P(int& outNS_i,
   
   // TODO: Evaluate interventions and resize population
   // The structure must be created when nr_BNB_Algo5 is called
+  // Using Muestreo multinomial 
   // Thats what i understand at this moment
 }
 
@@ -2007,6 +2008,7 @@ Rcpp::List nr_BNB_Algo5(Rcpp::List rFE,
   // double p2,
   // double PDBaseline) {
 
+  //TODO: save modelChanges in an intervention structure
   
   precissionLoss();
   const std::vector<double> mu = Rcpp::as<std::vector<double> >(mu_);
