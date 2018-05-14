@@ -40,6 +40,7 @@ IntegerVector rmultinom(int size,  Rcpp::NumericVector prob) {
   }
   // the rest go here
   draws[probsize-1] = size;
+  //Rcpp::Rcout << "\n MULT = "<< draws;
   return draws;
 }
 

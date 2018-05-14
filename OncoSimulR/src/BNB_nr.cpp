@@ -517,32 +517,34 @@ void nr_totPopSize_and_fill_out_crude_P(int& outNS_i,
   // The structure must be created when nr_BNB_Algo5 is called
   // Using multinomial 
   // Thats what i understand at this moment
-  int tot_pop = 0.0;
-  
-  //Rcpp::Rcout << "\nCHECK "<< inters.size() <<" INTERVENTIONS:\n";
+  float tot_pop = 0.0;
   for(size_t i = 0 ; i < inters.size() ; ++i){
-    //Rcpp::Rcout << "Checking popSize trigger intervention["<< inters[i].indx<<"]";
+    //Rcpp::Rcout << "\n Checking popSize trigger intervention["<< inters[i].indx<<"]";
     //Rcpp::Rcout << "\n POPSIZE = "<< totPopSize;
 
     if (totPopSize >= inters[i].trigger.popSize){
-      //Rcpp::Rcout << "\n" << "TRIGGER ACTIVATED!\n";
-      tot_pop = (int) totPopSize * inters[i].action.fractionPopSize;
+      Rcpp::Rcout << "\n" << "TRIGGER ACTIVATED!\n";
+      tot_pop = totPopSize * inters[i].action.fractionPopSize;
+      Rcpp::Rcout << "\n" << tot_pop << " || " << (int) tot_pop;
       Rcpp::NumericVector probSizes(popParams.size());
       for(size_t j = 0 ; j < popParams.size() ; ++j){
         probSizes[j] = popParams[j].popSize/totPopSize;    
       }
       
-      //Rcpp::Rcout << "\n ProbSizes = "<< probSizes;
+      Rcpp::Rcout << "\n ProbSizes = "<< probSizes;
       Rcpp::IntegerVector new_PopSizes(popParams.size());
-      new_PopSizes = rmultinom(tot_pop,  probSizes); 
-      //Rcpp::Rcout << "\n new_PopSizes = "<< new_PopSizes;
+      new_PopSizes = rmultinom((int)tot_pop,  probSizes); 
+      Rcpp::Rcout << "\n new_PopSizes = "<< new_PopSizes;
+      
       totPopSize = 0.0;
       for(size_t k = 0 ; k < popParams.size() ; ++k){
         popParams[k].popSize = (double) new_PopSizes[k];
-        totPopSize += (double) new_PopSizes[k];
+        Rcpp::Rcout << "\n popParams ["<< k <<"] : "<< popParams[k].popSize;
+        totPopSize = totPopSize + (double) new_PopSizes[k];
       }
-      //Rcpp::Rcout << "\n TotPopSize = "<< totPopSize;
-      inters.erase(inters.begin() + inters[i].indx); //remove intervertion[i]
+      Rcpp::Rcout << "\n TotPopSize = "<< totPopSize;
+      inters.clear();
+      //inters.erase(inters.begin() + inters[i].indx); //remove intervertion[i]
       //Rcpp::Rcout << "\n TAM ITERS = "<< inters.size();
     }
     
