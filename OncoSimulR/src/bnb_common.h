@@ -44,6 +44,24 @@
 //   int numMutablePos; //for mutator if need update of mutation
 // };
 
+//DCH Intervention Strucutures ===========================================
+//Trigger structure, in the future add more atributes
+struct Trigger {
+  double popSize;
+};
+
+//Action structure, in the future add more atributes
+struct Action {
+  double fractionPopSize;
+};
+
+//Intervention structure
+struct Intervention {
+  Trigger trigger;
+  Action action;
+  double indx;
+};
+//DCH ===========================================
 
 inline void W_f_st(spParamsP& spP){
   spP.W = spP.death + spP.birth + spP.mutation;

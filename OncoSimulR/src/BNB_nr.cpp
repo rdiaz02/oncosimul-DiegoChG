@@ -34,6 +34,8 @@
 #include <ctime>
 #include <sys/time.h> 
 #include <stdexcept>
+//DCH
+#include "multinomial.h"
 
 using namespace Rcpp;
 using std::vector;
@@ -46,6 +48,8 @@ using std::vector;
 double g_min_birth_mut_ratio_nr = DBL_MAX;
 double g_min_death_mut_ratio_nr = DBL_MAX;
 double g_tmp1_nr = DBL_MAX;
+// DCH Here?
+vector<Intervention> inters; 
 #endif
 
 
@@ -212,7 +216,7 @@ void nr_totPopSize_and_fill_out_crude_P(int& outNS_i,
 					int& lastMaxDr,
 					double& done_at,
 					const std::vector<Genotype>& Genotypes,
-					const std::vector<spParamsP>& popParams, 
+					std::vector<spParamsP>& popParams, //DCH I cant modify popParams[i].popSize if this is const
 					const double& currentTime,
 					const double& keepEvery,
 					const double& detectionSize,
@@ -509,11 +513,44 @@ void nr_totPopSize_and_fill_out_crude_P(int& outNS_i,
     }
   }
   
-  // TODO: Evaluate interventions and resize population
+  // DCH TODO: Evaluate interventions and resize population
   // The structure must be created when nr_BNB_Algo5 is called
-  // Using Muestreo multinomial 
+  // Using multinomial 
   // Thats what i understand at this moment
+  int tot_pop = 0.0;
+  
+  //Rcpp::Rcout << "\nCHECK "<< inters.size() <<" INTERVENTIONS:\n";
+  for(size_t i = 0 ; i < inters.size() ; ++i){
+    //Rcpp::Rcout << "Checking popSize trigger intervention["<< inters[i].indx<<"]";
+    //Rcpp::Rcout << "\n POPSIZE = "<< totPopSize;
+
+    if (totPopSize >= inters[i].trigger.popSize){
+      //Rcpp::Rcout << "\n" << "TRIGGER ACTIVATED!\n";
+      tot_pop = (int) totPopSize * inters[i].action.fractionPopSize;
+      Rcpp::NumericVector probSizes(popParams.size());
+      for(size_t j = 0 ; j < popParams.size() ; ++j){
+        probSizes[j] = popParams[j].popSize/totPopSize;    
+      }
+      
+      //Rcpp::Rcout << "\n ProbSizes = "<< probSizes;
+      Rcpp::IntegerVector new_PopSizes(popParams.size());
+      new_PopSizes = rmultinom(tot_pop,  probSizes); 
+      //Rcpp::Rcout << "\n new_PopSizes = "<< new_PopSizes;
+      totPopSize = 0.0;
+      for(size_t k = 0 ; k < popParams.size() ; ++k){
+        popParams[k].popSize = (double) new_PopSizes[k];
+        totPopSize += (double) new_PopSizes[k];
+      }
+      //Rcpp::Rcout << "\n TotPopSize = "<< totPopSize;
+      inters.erase(inters.begin() + inters[i].indx); //remove intervertion[i]
+      //Rcpp::Rcout << "\n TAM ITERS = "<< inters.size();
+    }
+    
+  }
+  
 }
+
+//========================================================================
 
 // FIXME: I might want to return the actual drivers in each period
 // and the actual drivers in the population with largest popsize
@@ -1999,8 +2036,6 @@ static void nr_innerBNB (const fitnessEffectsAll& fitnessEffects,
   }
 }
 
-
-
 // [[Rcpp::export]]
 Rcpp::List nr_BNB_Algo5(Rcpp::List rFE,
 			Rcpp::NumericVector mu_,
@@ -2087,6 +2122,26 @@ Rcpp::List nr_BNB_Algo5(Rcpp::List rFE,
     if(verbosity >= 1)
       Rcpp::Rcout << "  cPDetect set at " << cPDetect << "\n";
   }
+ 
+  //DCH Interventions vector
+  
+  int i;
+  for(i = 0 ; i< modelChanges.size() ; i++){
+    inters.push_back(Intervention());
+    inters[i].trigger = Trigger();
+    inters[i].trigger.popSize = Rcpp::as<double>( Rcpp::as<Rcpp::List>(
+      Rcpp::as<Rcpp::List>(
+        modelChanges[i])["trigger"])["popSize"] );
+    // Add more atributes in the future to trigger
+    inters[i].action = Action();
+    inters[i].action.fractionPopSize = Rcpp::as<double>( Rcpp::as<Rcpp::List>(
+      Rcpp::as<Rcpp::List>(
+        modelChanges[i])["action"])["fractionPopSize"] );
+    // Add more atributes in the future to action
+    inters[i].indx = i;
+  }
+  //Rcpp::Rcout << "Interventions created\n";
+  
   
   if( (K < 1 ) && ( typeModel ==   TypeModel::mcfarlandlog) )
     throw std::range_error("K < 1.");
