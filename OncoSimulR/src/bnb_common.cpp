@@ -832,7 +832,7 @@ void computeMcFarlandError_new(double& em1,
     double etmp, etmpsc;
     etmp = 0.0;
     etmpsc = 0.0;
-    double DC = log1p(totPopSize/K);
+    double DC = std::max(1.0,log1p(totPopSize/K));
     if( std::abs(totPopSize - totPopSize_previous) < 1 ) {
       etmp = 0.0;
     } else {
@@ -860,7 +860,7 @@ void computeMcFarlandError_new(double& em1,
     double etmp, etmpsc;
     etmp = 0.0;
     etmpsc = 0.0;
-    double DC = log1p(totPopSize/K);
+    double DC = std::max(1.0,log1p(totPopSize/K));
     if( std::abs(totPopSize - totPopSize_previous) < 1 ) {
       etmp = 0.0;
     } else {
@@ -1019,7 +1019,7 @@ void updateRatesMcFarlandLog(std::vector<spParamsP>& popParams,
 			     const double& totPopSize){
 
   // from original log(1 + totPopSize/K)
-  adjust_fitness_MF = log1p(totPopSize/K);
+  adjust_fitness_MF = std::max(1.0,log1p(totPopSize/K));
   
   for(size_t i = 0; i < popParams.size(); ++i) {
     popParams[i].death = adjust_fitness_MF;

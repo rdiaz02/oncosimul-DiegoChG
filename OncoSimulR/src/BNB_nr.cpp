@@ -215,7 +215,7 @@ void nr_totPopSize_and_fill_out_crude_P(int& outNS_i,
 					bool& reachDetection,
 					int& lastMaxDr,
 					double& done_at,
-					const std::vector<Genotype>& Genotypes,
+					std::vector<Genotype>& Genotypes,
 					std::vector<spParamsP>& popParams, //DCH I cant modify popParams[i].popSize if this is const
 					const double& currentTime,
 					const double& keepEvery,
@@ -241,6 +241,7 @@ void nr_totPopSize_and_fill_out_crude_P(int& outNS_i,
 					POM& pom,
 					const std::map<int, std::string>& intName,
 					const fitness_as_genes& genesInFitness,
+					std::multimap<double, int>& mapTimes,
 					const double& fatalPopSize = 1e15
 					) {
   // Fill out, but also compute totPopSize
@@ -519,13 +520,14 @@ void nr_totPopSize_and_fill_out_crude_P(int& outNS_i,
   // Thats what i understand at this moment
   float tot_pop = 0.0;
   for(size_t i = 0 ; i < inters.size() ; ++i){
-    //Rcpp::Rcout << "\n Checking popSize trigger intervention["<< inters[i].indx<<"]";
-    //Rcpp::Rcout << "\n POPSIZE = "<< totPopSize;
-
+   
+    //Check if the trigger is triggered
     if (totPopSize >= inters[i].trigger.popSize){
+      
       Rcpp::Rcout << "\n" << "TRIGGER ACTIVATED!\n";
       tot_pop = totPopSize * inters[i].action.fractionPopSize;
       Rcpp::Rcout << "\n" << tot_pop << " || " << (int) tot_pop;
+      //Create a numeric vector with % of each clone
       Rcpp::NumericVector probSizes(popParams.size());
       for(size_t j = 0 ; j < popParams.size() ; ++j){
         probSizes[j] = popParams[j].popSize/totPopSize;    
@@ -533,19 +535,31 @@ void nr_totPopSize_and_fill_out_crude_P(int& outNS_i,
       
       Rcpp::Rcout << "\n ProbSizes = "<< probSizes;
       Rcpp::IntegerVector new_PopSizes(popParams.size());
+      //Create sp_to_remove vector
+      std::vector<int> sp_to_remove;
+      sp_to_remove.clear();
+      // Obtain the population new sizes
       new_PopSizes = rmultinom((int)tot_pop,  probSizes); 
       Rcpp::Rcout << "\n new_PopSizes = "<< new_PopSizes;
       
       totPopSize = 0.0;
       for(size_t k = 0 ; k < popParams.size() ; ++k){
+        if ((double) new_PopSizes[k] == 0.0){
+          Rcpp::Rcout << "\n Añadimos para borrar 0 ";
+          sp_to_remove.push_back(k);
+        }
         popParams[k].popSize = (double) new_PopSizes[k];
-        Rcpp::Rcout << "\n popParams ["<< k <<"] : "<< popParams[k].popSize;
+        //Rcpp::Rcout << "\n popParams ["<< k <<"] : "<< popParams[k].popSize;
         totPopSize = totPopSize + (double) new_PopSizes[k];
       }
+      if(sp_to_remove.size())
+        Rcpp::Rcout << "\n Borramos";
+        remove_zero_sp_nr(sp_to_remove, Genotypes, popParams, mapTimes);
       Rcpp::Rcout << "\n TotPopSize = "<< totPopSize;
+      // We have to take a look to this 
       inters.clear();
-      //inters.erase(inters.begin() + inters[i].indx); //remove intervertion[i]
-      //Rcpp::Rcout << "\n TAM ITERS = "<< inters.size();
+      //inters.erase(inters.begin() + i); //remove intervertion[i]
+      //break;
     }
     
   }
@@ -1177,7 +1191,7 @@ static void nr_innerBNB (const fitnessEffectsAll& fitnessEffects,
 
   // en1 = 0;
   double totPopSize_previous = totPopSize;
-  double DA_previous = log1p(totPopSize_previous/K);
+  double DA_previous = std::max(1.0 ,log1p(totPopSize_previous/K));
 
       // // FIXME debug
       // Rcpp::Rcout << "\n popSize[0]  at 10004 ";
@@ -1267,7 +1281,7 @@ static void nr_innerBNB (const fitnessEffectsAll& fitnessEffects,
     // } else       if(typeModel == TypeModel::mcfarlandlog) {
 
     if(typeModel == TypeModel::mcfarlandlog) {
-      popParams[0].death = log1p(totPopSize/K);
+      popParams[0].death = std::max(1.0, log1p(totPopSize/K));
       popParams[0].birth = prodFitness(evalGenotypeFitness(Genotypes[0],
 								fitnessEffects));
     } else if(typeModel == TypeModel::bozic1) {
@@ -1329,7 +1343,7 @@ static void nr_innerBNB (const fitnessEffectsAll& fitnessEffects,
     // } else if(typeModel == TypeModel::mcfarlandlog) {
     if(typeModel == TypeModel::mcfarlandlog) {
       popParams[0].birth = 1.0;
-      popParams[0].death = log1p(totPopSize/K);
+      popParams[0].death = std::max(1.0 ,log1p(totPopSize/K));
       // no need to call updateRates
     } else if(typeModel == TypeModel::bozic1) {
        popParams[0].birth = 1.0;
@@ -1990,7 +2004,8 @@ static void nr_innerBNB (const fitnessEffectsAll& fitnessEffects,
 					 fixation_min_size,
 					 num_successive_fixation,
 					 pom, intName,
-					 genesInFitness); //keepEvery is for thinning
+					 genesInFitness, 
+					 mapTimes); //keepEvery is for thinning
       if(verbosity >= 3) {
 	Rcpp::Rcout << "\n popParams.size() before sampling " << popParams.size() 
 		  << "\n totPopSize after sampling " << totPopSize << "\n";
