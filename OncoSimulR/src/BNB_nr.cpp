@@ -556,6 +556,7 @@ void nr_totPopSize_and_fill_out_crude_P(int& outNS_i,
         Rcpp::Rcout << "\n Borramos";
         remove_zero_sp_nr(sp_to_remove, Genotypes, popParams, mapTimes);
       Rcpp::Rcout << "\n TotPopSize = "<< totPopSize;
+      // Remove only the intervention triggered
       // We have to take a look to this 
       inters.clear();
       //inters.erase(inters.begin() + i); //remove intervertion[i]
