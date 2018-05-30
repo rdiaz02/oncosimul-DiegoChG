@@ -524,28 +524,26 @@ void nr_totPopSize_and_fill_out_crude_P(int& outNS_i,
     //Check if the trigger is triggered
     if (totPopSize >= inters[i].trigger.popSize){
       
-      Rcpp::Rcout << "\n" << "TRIGGER ACTIVATED!\n";
+      Rcpp::Rcout << "\n" << "TRIGGER ACTIVATED! Size: "<<inters[i].trigger.popSize <<"\n";
       tot_pop = totPopSize * inters[i].action.fractionPopSize;
-      Rcpp::Rcout << "\n" << tot_pop << " || " << (int) tot_pop;
       //Create a numeric vector with % of each clone
       Rcpp::NumericVector probSizes(popParams.size());
       for(size_t j = 0 ; j < popParams.size() ; ++j){
         probSizes[j] = popParams[j].popSize/totPopSize;    
       }
       
-      Rcpp::Rcout << "\n ProbSizes = "<< probSizes;
+      //Rcpp::Rcout << "\n ProbSizes = "<< probSizes;
       Rcpp::IntegerVector new_PopSizes(popParams.size());
       //Create sp_to_remove vector
       std::vector<int> sp_to_remove;
       sp_to_remove.clear();
       // Obtain the population new sizes
       new_PopSizes = rmultinom((int)tot_pop,  probSizes); 
-      Rcpp::Rcout << "\n new_PopSizes = "<< new_PopSizes;
+      //Rcpp::Rcout << "\n new_PopSizes = "<< new_PopSizes;
       
       totPopSize = 0.0;
       for(size_t k = 0 ; k < popParams.size() ; ++k){
         if ((double) new_PopSizes[k] == 0.0){
-          Rcpp::Rcout << "\n Añadimos para borrar 0 ";
           sp_to_remove.push_back(k);
         }
         popParams[k].popSize = (double) new_PopSizes[k];
@@ -553,14 +551,13 @@ void nr_totPopSize_and_fill_out_crude_P(int& outNS_i,
         totPopSize = totPopSize + (double) new_PopSizes[k];
       }
       if(sp_to_remove.size())
-        Rcpp::Rcout << "\n Borramos";
         remove_zero_sp_nr(sp_to_remove, Genotypes, popParams, mapTimes);
-      Rcpp::Rcout << "\n TotPopSize = "<< totPopSize;
       // Remove only the intervention triggered
       // We have to take a look to this 
-      inters.clear();
-      //inters.erase(inters.begin() + i); //remove intervertion[i]
-      //break;
+      // inters.clear();
+      inters.erase(inters.begin() + i); //remove intervertion[i]
+      Rcpp::Rcout << "\n Inters size = " << inters.size();
+      break;
     }
     
   }
