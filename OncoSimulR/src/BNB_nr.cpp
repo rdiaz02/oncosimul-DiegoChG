@@ -48,8 +48,9 @@ using std::vector;
 double g_min_birth_mut_ratio_nr = DBL_MAX;
 double g_min_death_mut_ratio_nr = DBL_MAX;
 double g_tmp1_nr = DBL_MAX;
-// DCH Here?
+// DCH 
 vector<Intervention> inters; 
+vector<double> interv_time;
 #endif
 
 
@@ -524,8 +525,13 @@ void nr_totPopSize_and_fill_out_crude_P(int& outNS_i,
     //Check if the trigger is triggered
     if (totPopSize >= inters[i].trigger.popSize){
       
-      Rcpp::Rcout << "\n" << "TRIGGER ACTIVATED! Size: "<<inters[i].trigger.popSize <<"\n";
+      Rcpp::Rcout << "\n" << "Intervention ["<< inters[i].indx <<
+        "] applied in time "<< currentTime<<"\n";
+      
+      interv_time.push_back(currentTime);
+      
       tot_pop = totPopSize * inters[i].action.fractionPopSize;
+      Rcpp::Rcout << "Before: " << totPopSize << "After: "<< tot_pop;
       //Create a numeric vector with % of each clone
       Rcpp::NumericVector probSizes(popParams.size());
       for(size_t j = 0 ; j < popParams.size() ; ++j){
@@ -556,7 +562,6 @@ void nr_totPopSize_and_fill_out_crude_P(int& outNS_i,
       // We have to take a look to this 
       // inters.clear();
       inters.erase(inters.begin() + i); //remove intervertion[i]
-      Rcpp::Rcout << "\n Inters size = " << inters.size();
       break;
     }
     
@@ -2141,6 +2146,8 @@ Rcpp::List nr_BNB_Algo5(Rcpp::List rFE,
   //DCH Interventions vector
   
   int i;
+  inters.clear();
+  interv_time.clear();
   for(i = 0 ; i< modelChanges.size() ; i++){
     inters.push_back(Intervention());
     inters[i].trigger = Trigger();
@@ -2569,7 +2576,8 @@ Rcpp::List nr_BNB_Algo5(Rcpp::List rFE,
 										   Named("parent") = lod_parent, // lod.parent,
 										   Named("child") = lod_child //lod.child
 										   ),
-					       Named("POM") = Rcpp::wrap(pom.genotypesString)
+					       Named("POM") = Rcpp::wrap(pom.genotypesString),
+					       Named("interv_time") = interv_time
 					       )
 		 );
 }

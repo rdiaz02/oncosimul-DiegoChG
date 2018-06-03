@@ -1333,7 +1333,8 @@ plotClonesSt <- function(z,
                 if(length(ldrv) > 6) legend.ncols <- 2
                 else legend.ncols <- 1
             }
-            legend(x = "topleft",
+            legend(x = "topright",
+                   inset=c(-3,0), # DCH to see graph with genotypes
                    title = "Genotypes",
                    pch = 15,
                    col = cll$colors,
