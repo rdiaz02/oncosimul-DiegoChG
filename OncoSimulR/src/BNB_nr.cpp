@@ -531,21 +531,19 @@ void nr_totPopSize_and_fill_out_crude_P(int& outNS_i,
       interv_time.push_back(currentTime);
       
       tot_pop = totPopSize * inters[i].action.fractionPopSize;
-      Rcpp::Rcout << "Before: " << totPopSize << "After: "<< tot_pop;
+      Rcpp::Rcout << "Before: " << totPopSize << " After: "<< tot_pop;
       //Create a numeric vector with % of each clone
       Rcpp::NumericVector probSizes(popParams.size());
       for(size_t j = 0 ; j < popParams.size() ; ++j){
         probSizes[j] = popParams[j].popSize/totPopSize;    
       }
-      
-      //Rcpp::Rcout << "\n ProbSizes = "<< probSizes;
+     
       Rcpp::IntegerVector new_PopSizes(popParams.size());
       //Create sp_to_remove vector
       std::vector<int> sp_to_remove;
       sp_to_remove.clear();
       // Obtain the population new sizes
       new_PopSizes = rmultinom((int)tot_pop,  probSizes); 
-      //Rcpp::Rcout << "\n new_PopSizes = "<< new_PopSizes;
       
       totPopSize = 0.0;
       for(size_t k = 0 ; k < popParams.size() ; ++k){
@@ -553,15 +551,13 @@ void nr_totPopSize_and_fill_out_crude_P(int& outNS_i,
           sp_to_remove.push_back(k);
         }
         popParams[k].popSize = (double) new_PopSizes[k];
-        //Rcpp::Rcout << "\n popParams ["<< k <<"] : "<< popParams[k].popSize;
         totPopSize = totPopSize + (double) new_PopSizes[k];
       }
+      Rcpp::Rcout << "\n After multinomial: " << totPopSize;
       if(sp_to_remove.size())
         remove_zero_sp_nr(sp_to_remove, Genotypes, popParams, mapTimes);
-      // Remove only the intervention triggered
-      // We have to take a look to this 
-      // inters.clear();
-      inters.erase(inters.begin() + i); //remove intervertion[i]
+     
+      inters.erase(inters.begin() + i);
       break;
     }
     

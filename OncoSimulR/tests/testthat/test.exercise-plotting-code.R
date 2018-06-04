@@ -85,6 +85,7 @@ test_that("exercising plotClonePhylog", {
                                      finalTime = 3000,
                                      onlyCancer = FALSE,
                                      keepPhylog = TRUE)
+    
               ## Show only those with N > 10 at end
               plotClonePhylog(tmp, N = 10)
               ## Show only those with N > 1 between times 5 and 1000
