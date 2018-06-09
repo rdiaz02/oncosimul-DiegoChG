@@ -51,6 +51,7 @@ double g_tmp1_nr = DBL_MAX;
 // DCH 
 vector<Intervention> inters; 
 vector<double> interv_time;
+vector<int> interv_pop;
 #endif
 
 
@@ -450,7 +451,58 @@ void nr_totPopSize_and_fill_out_crude_P(int& outNS_i,
   
   if(simulsDone)
     storeThis = true;
-
+  
+  // DCH TODO: Evaluate interventions and resize population
+  // The structure must be created when nr_BNB_Algo5 is called
+  // Using multinomial 
+  // Thats what i understand at this moment
+  float tot_pop = 0.0;
+  for(size_t i = 0 ; i < inters.size() ; ++i){
+    
+    //Check if the trigger is triggered
+    if (totPopSize >= inters[i].trigger.popSize){
+      storeThis = true;
+      // RDU_CHECK: ideally storeThis here, and right after.
+      // to do it well, make a function of the storing
+      // and think about times, because we would have two pop sizes for the same time
+      Rcpp::Rcout << "\n" << "Intervention ["<< inters[i].indx <<
+        "] applied in time "<< currentTime<<"\n";
+      
+      interv_time.push_back(currentTime);
+      interv_pop.push_back(totPopSize);
+      
+      tot_pop = totPopSize * inters[i].action.fractionPopSize;
+      Rcpp::Rcout << "Before: " << totPopSize << " After: "<< tot_pop;
+      //Create a numeric vector with % of each clone
+      Rcpp::NumericVector probSizes(popParams.size());
+      for(size_t j = 0 ; j < popParams.size() ; ++j){
+        probSizes[j] = popParams[j].popSize/totPopSize;    
+      }
+      
+      Rcpp::IntegerVector new_PopSizes(popParams.size());
+      //Create sp_to_remove vector
+      std::vector<int> sp_to_remove;
+      sp_to_remove.clear();
+      // Obtain the population new sizes
+      new_PopSizes = rmultinom((int)tot_pop,  probSizes); 
+      
+      totPopSize = 0.0;
+      for(size_t k = 0 ; k < popParams.size() ; ++k){
+        if ((double) new_PopSizes[k] == 0.0){
+          sp_to_remove.push_back(k);
+        }
+        popParams[k].popSize = (double) new_PopSizes[k];
+        totPopSize = totPopSize + (double) new_PopSizes[k];
+      }
+      Rcpp::Rcout << "\n After multinomial: " << totPopSize;
+      if(sp_to_remove.size())
+        remove_zero_sp_nr(sp_to_remove, Genotypes, popParams, mapTimes);
+      
+      inters.erase(inters.begin() + i);
+      break;
+    }
+    
+  }
 
   
   
@@ -515,53 +567,7 @@ void nr_totPopSize_and_fill_out_crude_P(int& outNS_i,
     }
   }
   
-  // DCH TODO: Evaluate interventions and resize population
-  // The structure must be created when nr_BNB_Algo5 is called
-  // Using multinomial 
-  // Thats what i understand at this moment
-  float tot_pop = 0.0;
-  for(size_t i = 0 ; i < inters.size() ; ++i){
-   
-    //Check if the trigger is triggered
-    if (totPopSize >= inters[i].trigger.popSize){
-      
-      Rcpp::Rcout << "\n" << "Intervention ["<< inters[i].indx <<
-        "] applied in time "<< currentTime<<"\n";
-      
-      interv_time.push_back(currentTime);
-      
-      tot_pop = totPopSize * inters[i].action.fractionPopSize;
-      Rcpp::Rcout << "Before: " << totPopSize << " After: "<< tot_pop;
-      //Create a numeric vector with % of each clone
-      Rcpp::NumericVector probSizes(popParams.size());
-      for(size_t j = 0 ; j < popParams.size() ; ++j){
-        probSizes[j] = popParams[j].popSize/totPopSize;    
-      }
-     
-      Rcpp::IntegerVector new_PopSizes(popParams.size());
-      //Create sp_to_remove vector
-      std::vector<int> sp_to_remove;
-      sp_to_remove.clear();
-      // Obtain the population new sizes
-      new_PopSizes = rmultinom((int)tot_pop,  probSizes); 
-      
-      totPopSize = 0.0;
-      for(size_t k = 0 ; k < popParams.size() ; ++k){
-        if ((double) new_PopSizes[k] == 0.0){
-          sp_to_remove.push_back(k);
-        }
-        popParams[k].popSize = (double) new_PopSizes[k];
-        totPopSize = totPopSize + (double) new_PopSizes[k];
-      }
-      Rcpp::Rcout << "\n After multinomial: " << totPopSize;
-      if(sp_to_remove.size())
-        remove_zero_sp_nr(sp_to_remove, Genotypes, popParams, mapTimes);
-     
-      inters.erase(inters.begin() + i);
-      break;
-    }
-    
-  }
+
   
 }
 
@@ -2144,6 +2150,7 @@ Rcpp::List nr_BNB_Algo5(Rcpp::List rFE,
   int i;
   inters.clear();
   interv_time.clear();
+  interv_pop.clear();
   for(i = 0 ; i< modelChanges.size() ; i++){
     inters.push_back(Intervention());
     inters[i].trigger = Trigger();
@@ -2573,7 +2580,9 @@ Rcpp::List nr_BNB_Algo5(Rcpp::List rFE,
 										   Named("child") = lod_child //lod.child
 										   ),
 					       Named("POM") = Rcpp::wrap(pom.genotypesString),
-					       Named("interv_time") = interv_time
+					       Named("interv_time") = interv_time,
+					       Named("interv_pop") = interv_pop
+					       
 					       )
 		 );
 }

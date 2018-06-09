@@ -95,7 +95,7 @@ tmp <-  oncoSimulIndiv(examplesFitnessEffects[["o3"]],
                        sampleEvery = 0.025,
                        max.num.tries = 10,
                        keepEvery = 5,
-                       initSize = 2000,
+                       initSize = 20000, 
                        finalTime = 3000,
                        onlyCancer = FALSE,
                        keepPhylog = TRUE)

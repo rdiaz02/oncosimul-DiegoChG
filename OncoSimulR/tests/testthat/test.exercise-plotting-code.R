@@ -81,7 +81,7 @@ test_that("exercising plotClonePhylog", {
                                      sampleEvery = 0.03, 
                                      max.num.tries = 10,
                                      keepEvery = 15,
-                                     initSize = 2000,
+                                     initSize = 200000, ## RDU_CHECK: with 2000 it goes to extinction? DCH: Changed in plotClonePhylog.Rd
                                      finalTime = 3000,
                                      onlyCancer = FALSE,
                                      keepPhylog = TRUE)

@@ -53,7 +53,8 @@
                            srange = c(0.4, 1),
                            vrange = c(0.8, 1),
                            breakSortColors = "oe",
-                           legend.ncols = "auto", ...)
+                           legend.ncols = "auto", 
+                           with_legend = TRUE,...)
 
 \method{plot}{oncosimulpop}(x,
                               ask = TRUE,
@@ -303,11 +304,12 @@
 
 \item{legend.ncols}{The number of columns of the legend. If
   \code{"auto"} (the default), will have one column for six or less
-  entries, and two for more than six.
+  entries, and two for more than six.}
+  
+\item{with_legend}{If we set it to FALSE the legend wouldn't be shown. 
+  The default value is TRUE.
 }
 
-
- 
   \item{\dots}{
     Other arguments passed to \code{plots}. For instance, \code{main}.
     

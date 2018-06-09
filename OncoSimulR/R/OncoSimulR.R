@@ -386,7 +386,8 @@ oncoSimulPop <- function(Nindiv,
                          fixation = NULL,
                          verbosity  = 0,
                          mc.cores = detectCores(),
-                         seed = "auto") {
+                         seed = "auto",
+                         modelChanges = NULL) {
 
     if(Nindiv < 1)
         stop("Nindiv must be >= 1")
@@ -427,7 +428,8 @@ oncoSimulPop <- function(Nindiv,
                         mutationPropGrowth = mutationPropGrowth,
                         detectionProb = detectionProb,
                         AND_DrvProbExit = AND_DrvProbExit,
-                        fixation = fixation),
+                        fixation = fixation,
+                        modelChanges = modelChanges),
                     mc.cores = mc.cores
                     )
     class(pop) <- "oncosimulpop"
@@ -1039,6 +1041,7 @@ plot.oncosimul <- function(x,
                            vrange = c(0.8, 1),
                            breakSortColors = "oe",
                            legend.ncols = "auto",
+                           with_legend = TRUE,
                            ...
                            ) {
 
@@ -1142,6 +1145,7 @@ plot.oncosimul <- function(x,
                      ylab = ylab,
                      ylim = ylim,
                      xlim = xlim,
+                     with_legend = with_legend,
                      ...)
     }
 
@@ -1162,6 +1166,7 @@ plot.oncosimul <- function(x,
                      log = log, ylim = ylim,
                      xlim = xlim,
                      legend.ncols = legend.ncols,
+                     with_legend = with_legend,
                      ...)
     }
     if(plotDiversity) {
@@ -1194,6 +1199,7 @@ plotClonesSt <- function(z,
                          ylab = "Number of cells",
                          ylim = NULL,
                          xlim = NULL,
+                         with_legend = TRUE,
                          ...) {
 
     ## if given ndr, we order columns based on ndr, so clones with more
@@ -1313,14 +1319,16 @@ plotClonesSt <- function(z,
                 if(length(cll$colorsLegend$Drivers) > 6) legend.ncols <- 2
                 else legend.ncols <- 1
             }
-            legend(x = "topleft",
-                   title = "Number of drivers",
-                   pch = 15,
-                   ## lty = 1,
-                   ## lwd = 2,
-                   col = cll$colorsLegend$Color,
-                   legend = cll$colorsLegend$Drivers,
-                   ncol = legend.ncols)
+            if(with_legend == TRUE){ #DCH option to disable legend
+              legend(x = "topleft",
+                     title = "Number of drivers",
+                     pch = 15,
+                     ## lty = 1,
+                     ## lwd = 2,
+                     col = cll$colorsLegend$Color,
+                     legend = cll$colorsLegend$Drivers,
+                     ncol = legend.ncols)
+            }
         } else if (show == "genotypes") {
             if(!inherits(z, "oncosimul2")) {
                 ldrv <- genotypeLabel(z)
@@ -1333,13 +1341,14 @@ plotClonesSt <- function(z,
                 if(length(ldrv) > 6) legend.ncols <- 2
                 else legend.ncols <- 1
             }
-            legend(x = "topleft",
-                   #inset=c(-3,0), # DCH to see graph with genotypes
-                   title = "Genotypes",
-                   pch = 15,
-                   col = cll$colors,
-                   legend = ldrv,
-                   ncol = legend.ncols)
+            if(with_legend == TRUE){ #DCH option to disable legend
+              legend(x = "topleft",
+                     title = "Genotypes",
+                     pch = 15,
+                     col = cll$colors,
+                     legend = ldrv,
+                     ncol = legend.ncols)
+            }
         }
     }
 }
@@ -1432,6 +1441,7 @@ plotDrivers0 <- function(x,
                          lty = 1:9, col = c(8, "orange", 6:1),
                          lwd = 2,
                          legend.ncols = "auto",
+                         with_legend = with_legend,
                          ...) {
     ## z <- create.drivers.by.time(x, numDrivers)
     z <- create.drivers.by.time(x, ndr)
@@ -1475,11 +1485,13 @@ plotDrivers0 <- function(x,
         if(length(ldrv) > 6) legend.ncols <- 2
         else legend.ncols <- 1
     }
-    legend(x = "topleft",
-           title = "Number of drivers",
-           lty = lty, col = col2, lwd = lwd,
-           legend = ldrv,
-           ncol = legend.ncols)
+    if(with_legend == TRUE){ #DCH option to disable legend
+      legend(x = "topleft",
+             title = "Number of drivers",
+             lty = lty, col = col2, lwd = lwd,
+             legend = ldrv,
+             ncol = legend.ncols)
+    }
     ## legend = (1:ncol(y)) - 1)
 }
 

@@ -42,7 +42,8 @@
                 initMutant = NULL,
                 AND_DrvProbExit = FALSE,
                 fixation = NULL,
-                seed = NULL)
+                seed = NULL,
+                modelChanges = NULL)
 
 oncoSimulPop(Nindiv, fp, model = "Exp", numPassengers = 0, mu = 1e-6,
                 muEF = NULL,
@@ -67,7 +68,8 @@ oncoSimulPop(Nindiv, fp, model = "Exp", numPassengers = 0, mu = 1e-6,
                 fixation = NULL,
                 verbosity = 0,
                 mc.cores = detectCores(),
-                seed = "auto")
+                seed = "auto",
+                modelChanges = NULL)
 
 
 oncoSimulSample(Nindiv,
@@ -601,7 +603,11 @@ of the individual done, and the number of attempts and time used.}
 
 }
 
-
+\item{modelChanges}{
+  Interventions list. Is a list of lists of lists. Each intervention has two 
+  lists: \code{trigger}: conditions that must be simultaneously satisfied and 
+  \code{effect}: specifies all that can change.
+}
 
 }
 \details{
