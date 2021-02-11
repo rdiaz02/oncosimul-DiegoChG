@@ -3,6 +3,14 @@
 <!-- [![codecov.io](https://codecov.io/github/rdiaz02/OncoSimul/coverage.svg?branch=master)](https://codecov.io/github/rdiaz02/OncoSimul?branch=master) -->
 
 
+# This is a copy of Diego Chicote Garcia's repo
+https://github.com/DiegoChG/OncoSimul
+
+and implements interventions removing a user-specified fraction of cells.
+
+The "trabajo fin de grado" is available from: https://repositorio.uam.es/handle/10486/688430
+
+
 
 # OncoSimul
 
